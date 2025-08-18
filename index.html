@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commercial Landscaping Maintenance Calculator - Nevada Markets</title>
+    <style>
+        :root {
+            --primary-blue: #1E3A8A;
+            --secondary-blue: #3B82F6;
+            --accent-red: #DC2626;
+            --dark-gray: #374151;
+            --light-gray: #F3F4F6;
+            --success-green: #059669;
+            --white: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light-gray);
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .cost-provider-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .cost-provider-section h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .toggle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .toggle-group {
+            text-align: center;
+        }
+
+        .toggle-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark-gray);
+        }
+
+        .toggle-buttons {
+            display: flex;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .toggle-buttons button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .vendor-btn.active {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .inhouse-btn.active {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .vendor-btn:hover:not(.active) {
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        .inhouse-btn:hover:not(.active) {
+            background: rgba(5, 150, 105, 0.1);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .card h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark-gray);
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--secondary-blue);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+
+        .ic-breakdown {
+            background: #f8fafc;
+            border: 2px solid var(--secondary-blue);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .ic-breakdown h4 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .breakdown-total {
+            font-weight: 700;
+            color: var(--primary-blue);
+            border-top: 2px solid var(--secondary-blue);
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .results-section {
+            grid-column: 1 / -1;
+            margin-top: 2rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-card.highlight {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .result-card h4 {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .result-card.highlight h4 {
+            opacity: 1;
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .breakdown-section {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .breakdown-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .breakdown-card h4 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .breakdown-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .breakdown-line.total {
+            border-top: 2px solid var(--primary-blue);
+            padding-top: 0.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .export-section {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .export-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .export-btn:hover {
+            background: var(--secondary-blue);
+        }
+
+        .explanation-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .breakdown-section {
+                grid-template-columns: 1fr;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Commercial Landscaping Maintenance Calculator</h1>
+        <p>Nevada Markets - Las Vegas & Reno | Competitive Pricing for Weekly Service Contracts</p>
+    </div>
+
+    <div class="container">
+        <!-- Cost Provider Toggle Section -->
+        <div class="cost-provider-section">
+            <h3>Cost Provider Selection</h3>
+            <div class="explanation-box">
+                <strong>Vendor:</strong> Raw Cost + 10% IC Profit → Total ÷ (1 - CW Margin%) | <strong>In-House:</strong> Raw Cost (no IC profit) → Total ÷ (1 - CW Margin%)
+            </div>
+            <div class="toggle-grid">
+                <div class="toggle-group">
+                    <label>Labor</label>
+                    <div class="toggle-buttons">
+                        <button class="vendor-btn active" data-category="labor" onclick="toggleProvider('labor', 'vendor')">Vendor</button>
+                        <button class="inhouse-btn" data-category="labor" onclick="toggleProvider('labor', 'inhouse')">In-House</button>
+                    </div>
+                </div>
+                <div class="toggle-group">
+                    <label>Equipment</label>
+                    <div class="toggle-buttons">
+                        <button class="vendor-btn active" data-category="equipment" onclick="toggleProvider('equipment', 'vendor')">Vendor</button>
+                        <button class="inhouse-btn" data-category="equipment" onclick="toggleProvider('equipment', 'inhouse')">In-House</button>
+                    </div>
+                </div>
+                <div class="toggle-group">
+                    <label>Materials</label>
+                    <div class="toggle-buttons">
+                        <button class="vendor-btn active" data-category="materials" onclick="toggleProvider('materials', 'vendor')">Vendor</button>
+                        <button class="inhouse-btn" data-category="materials" onclick="toggleProvider('materials', 'inhouse')">In-House</button>
+                    </div>
+                </div>
+                <div class="toggle-group">
+                    <label>Seasonal Services</label>
+                    <div class="toggle-buttons">
+                        <button class="vendor-btn active" data-category="seasonal" onclick="toggleProvider('seasonal', 'vendor')">Vendor</button>
+                        <button class="inhouse-btn" data-category="seasonal" onclick="toggleProvider('seasonal', 'inhouse')">In-House</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Project Details -->
+            <div class="card">
+                <h3>Property Details</h3>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="propertyType">Property Type</label>
+                        <select id="propertyType" onchange="updateCalculations()">
+                            <option value="office">Office Park - Standard appearance (1.0x)</option>
+                            <option value="retail">Retail Center - High visibility (1.2x)</option>
+                            <option value="medical">Medical Facility - Premium appearance (1.4x)</option>
+                            <option value="hotel">Hotel/Casino - Luxury standards (1.6x)</option>
+                            <option value="industrial">Industrial - Basic maintenance (0.8x)</option>
+                            <option value="restaurant">Restaurant - Enhanced curb appeal (1.3x)</option>
+                            <option value="multiacre">Multi-Acre Complex - Varied zones (1.1x)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="totalAcres">Total Property Size (Acres)</label>
+                        <input type="number" id="totalAcres" value="2.5" step="0.1" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="turfPercentage">Turf/Grass Percentage</label>
+                        <input type="number" id="turfPercentage" value="25" min="0" max="100" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="desertPercentage">Desert Landscaping %</label>
+                        <input type="number" id="desertPercentage" value="75" min="0" max="100" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="shrubLinearFeet">Shrub Hedges (Linear Feet)</label>
+                        <input type="number" id="shrubLinearFeet" value="500" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="palmTrees">Palm Trees (Count)</label>
+                        <input type="number" id="palmTrees" value="8" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="smallTrees">Small Trees (Count)</label>
+                        <input type="number" id="smallTrees" value="15" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="rockArea">Rock/DG Areas (Sq Ft)</label>
+                        <input type="number" id="rockArea" value="15000" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="accessDifficulty">Access Difficulty</label>
+                        <select id="accessDifficulty" onchange="updateCalculations()">
+                            <option value="1.0">Easy - Open access, minimal obstacles</option>
+                            <option value="1.15">Moderate - Some tight spaces, parking areas</option>
+                            <option value="1.3">Difficult - Limited access, many obstacles</option>
+                            <option value="1.5">Very Difficult - Confined spaces, heavy equipment restrictions</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="qualityLevel">Quality Standards</label>
+                        <select id="qualityLevel" onchange="updateCalculations()">
+                            <option value="1.0">Standard - Clean, professional appearance</option>
+                            <option value="1.2">Enhanced - Above-average attention to detail</option>
+                            <option value="1.4">Premium - Meticulous, showcase quality</option>
+                            <option value="1.6">Luxury - Resort/casino level perfection</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group full-width">
+                    <label>Weekly Service Add-Ons</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="irrigation" onchange="updateCalculations()">
+                            <label for="irrigation">Irrigation System Monitoring & Basic Repairs</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="pestControl" onchange="updateCalculations()">
+                            <label for="pestControl">Integrated Pest Management Program</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fertProgram" onchange="updateCalculations()">
+                            <label for="fertProgram">Monthly Fertilization Program</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="trashRemoval" onchange="updateCalculations()">
+                            <label for="trashRemoval">Trash & Debris Pickup Service</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="waterCompliance" onchange="updateCalculations()">
+                            <label for="waterCompliance">SNWA/TMWA Compliance Monitoring</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="plantHealth" onchange="updateCalculations()">
+                            <label for="plantHealth">Plant Health Care & Disease Prevention</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Labor & Equipment Section -->
+            <div class="card">
+                <h3>Vendor Labor & Equipment</h3>
+                
+                <!-- IC Rate Breakdown -->
+                <div class="ic-breakdown">
+                    <h4>Independent Contractor Rate Breakdown</h4>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="rawLaborRate">Raw Labor Rate ($/hour)</label>
+                            <input type="number" id="rawLaborRate" value="20.00" step="0.01" onchange="updateICBreakdown()">
+                        </div>
+                        <div class="input-group">
+                            <label for="stateTaxRate">State Income Tax (%)</label>
+                            <input type="number" id="stateTaxRate" value="0.00" step="0.01" onchange="updateICBreakdown()">
+                        </div>
+                        <div class="input-group">
+                            <label for="icProfitRate">IC Profit & OH (%)</label>
+                            <input type="number" id="icProfitRate" value="10.0" step="0.1" onchange="updateICBreakdown()">
+                        </div>
+                    </div>
+                    
+                    <div class="breakdown-grid">
+                        <span>Raw Labor Rate:</span><span id="rawRateDisplay">$20.00</span>
+                        <span>FICA (7.65%):</span><span id="ficaDisplay">$1.53</span>
+                        <span>FUTA (0.60%):</span><span id="futaDisplay">$0.12</span>
+                        <span>Workers Comp (2.50%):</span><span id="workCompDisplay">$0.50</span>
+                        <span>General Liability (0.50%):</span><span id="glDisplay">$0.10</span>
+                        <span>State Income Tax:</span><span id="stateTaxDisplay">$0.00</span>
+                        <span>Subtotal:</span><span id="subtotalDisplay">$22.25</span>
+                        <span>IC Profit & OH:</span><span id="icProfitDisplay">$2.23</span>
+                    </div>
+                    <div class="breakdown-total">
+                        <div class="breakdown-grid">
+                            <span>IC Loaded Rate:</span><span id="icLoadedRateDisplay">$24.48</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="crewSize">Crew Size (People)</label>
+                        <select id="crewSize" onchange="updateCalculations()">
+                            <option value="2">2 Person Crew - Small properties</option>
+                            <option value="3" selected>3 Person Crew - Standard</option>
+                            <option value="4">4 Person Crew - Large properties</option>
+                            <option value="5">5 Person Crew - Multi-acre sites</option>
+                            <option value="6">6 Person Crew - Massive complexes</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="equipmentType">Equipment Package</label>
+                        <select id="equipmentType" onchange="updateCalculations()">
+                            <option value="truck">Truck-mounted - Properties under 5 acres</option>
+                            <option value="trailer" selected>Trailer package - Standard commercial</option>
+                            <option value="large">Large equipment - Multi-acre properties</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="equipmentHourlyRate">Equipment Rate ($/hour)</label>
+                        <input type="number" id="equipmentHourlyRate" value="45.00" step="0.01" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="fuelSurcharge">Fuel Surcharge (%)</label>
+                        <input type="number" id="fuelSurcharge" value="8.0" step="0.1" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="timeOfService">Time of Service</label>
+                        <select id="timeOfService" onchange="updateCalculations()">
+                            <option value="1.0" selected>Normal Hours (5am-6pm)</option>
+                            <option value="1.25">Third Shift Premium (+25%)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="cityWideMargin">City Wide Margin (%)</label>
+                        <input type="number" id="cityWideMargin" value="35" step="0.1" onchange="updateCalculations()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seasonal Services & Materials -->
+            <div class="card">
+                <h3>Seasonal Services & Materials</h3>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="springPlanting">Spring Planting (Annual Cost)</label>
+                        <input type="number" id="springPlanting" value="2500" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="fallPlanting">Fall Planting (Annual Cost)</label>
+                        <input type="number" id="fallPlanting" value="1800" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="palmTrimming">Palm Tree Trimming (Annual)</label>
+                        <input type="number" id="palmTrimming" value="1200" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="treePruning">Tree Pruning (Annual)</label>
+                        <input type="number" id="treePruning" value="800" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="rockRefresh">Rock/DG Refresh (Annual)</label>
+                        <input type="number" id="rockRefresh" value="1500" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="irrigationRepairs">Irrigation Repairs (Annual Budget)</label>
+                        <input type="number" id="irrigationRepairs" value="3000" onchange="updateCalculations()">
+                    </div>
+                </div>
+
+                <div class="input-group full-width">
+                    <label for="mulchRefresh">Mulch/Ground Cover Refresh</label>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="mulchCubicYards">Cubic Yards Needed</label>
+                            <input type="number" id="mulchCubicYards" value="25" onchange="updateCalculations()">
+                        </div>
+                        <div class="input-group">
+                            <label for="mulchPricePerYard">Price per Cubic Yard</label>
+                            <input type="number" id="mulchPricePerYard" value="45" onchange="updateCalculations()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group full-width">
+                    <label>Fertilization & Treatment Program</label>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="fertApplications">Applications per Year</label>
+                            <input type="number" id="fertApplications" value="6" onchange="updateCalculations()">
+                        </div>
+                        <div class="input-group">
+                            <label for="fertCostPerApp">Cost per Application</label>
+                            <input type="number" id="fertCostPerApp" value="280" onchange="updateCalculations()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nevada Regulations & Climate -->
+            <div class="card">
+                <h3>Nevada Water Regulations & Climate Factors</h3>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="waterAuthority">Water Authority</label>
+                        <select id="waterAuthority" onchange="updateCalculations()">
+                            <option value="snwa" selected>SNWA - Las Vegas Area</option>
+                            <option value="tmwa">TMWA - Reno Area</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="seasonalVariation">Seasonal Pricing Model</label>
+                        <select id="seasonalVariation" onchange="updateCalculations()">
+                            <option value="fixed">Fixed Monthly Payment</option>
+                            <option value="seasonal" selected>Seasonal Variation (70% peak, 30% off-season)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="extremeHeatAdjustment">Extreme Heat Adjustment (%)</label>
+                        <input type="number" id="extremeHeatAdjustment" value="15" step="0.1" onchange="updateCalculations()">
+                    </div>
+                    <div class="input-group">
+                        <label for="waterRestrictionCompliance">Water Restriction Compliance</label>
+                        <select id="waterRestrictionCompliance" onchange="updateCalculations()">
+                            <option value="basic">Basic Compliance - Schedule adherence</option>
+                            <option value="enhanced" selected>Enhanced - Smart controllers & monitoring</option>
+                            <option value="premium">Premium - Full conservation program</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="explanation-box">
+                    <strong>Nevada Water Regulations:</strong> SNWA requires nonfunctional turf removal by 1/1/2027. Watering restricted to assigned days with blackout periods. TMWA uses odd/even addressing for watering schedules. Enhanced service includes smart controller management and violation prevention.
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <h3 style="color: var(--primary-blue); margin-bottom: 1.5rem; text-align: center;">Pricing Results</h3>
+            <div class="results-grid">
+                <div class="result-card">
+                    <h4>Weekly Labor Hours</h4>
+                    <div class="result-value" id="weeklyHours">0</div>
+                </div>
+                <div class="result-card">
+                    <h4>Weekly Labor Cost</h4>
+                    <div class="result-value" id="weeklyLaborCost">$0</div>
+                </div>
+                <div class="result-card">
+                    <h4>Weekly Equipment Cost</h4>
+                    <div class="result-value" id="weeklyEquipmentCost">$0</div>
+                </div>
+                <div class="result-card">
+                    <h4>Monthly Materials Cost</h4>
+                    <div class="result-value" id="monthlyMaterialsCost">$0</div>
+                </div>
+                <div class="result-card">
+                    <h4>Total Monthly Cost to CW</h4>
+                    <div class="result-value" id="totalMonthlyCost">$0</div>
+                </div>
+                <div class="result-card">
+                    <h4>Price Per Acre/Month</h4>
+                    <div class="result-value" id="pricePerAcre">$0</div>
+                </div>
+                <div class="result-card highlight">
+                    <h4>Monthly Client Price</h4>
+                    <div class="result-value" id="monthlyClientPrice">$0</div>
+                </div>
+                <div class="result-card highlight">
+                    <h4>CW Gross Profit</h4>
+                    <div class="result-value" id="grossProfit">$0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Breakdown Section -->
+        <div class="breakdown-section">
+            <div class="breakdown-card">
+                <h4>Weekly Service Breakdown</h4>
+                <div class="breakdown-line">
+                    <span>Mowing & Edging:</span>
+                    <span id="mowingHours">0 hrs</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Shrub Trimming:</span>
+                    <span id="shrubHours">0 hrs</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Blowing & Cleanup:</span>
+                    <span id="cleanupHours">0 hrs</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Desert Maintenance:</span>
+                    <span id="desertHours">0 hrs</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Irrigation Check:</span>
+                    <span id="irrigationHours">0 hrs</span>
+                </div>
+                <div class="breakdown-line total">
+                    <span>Total Weekly Hours:</span>
+                    <span id="totalWeeklyHours">0 hrs</span>
+                </div>
+            </div>
+
+            <div class="breakdown-card">
+                <h4>Monthly Cost Structure</h4>
+                <div class="breakdown-line">
+                    <span>Labor Cost:</span>
+                    <span id="monthlyLaborBreakdown">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Equipment Cost:</span>
+                    <span id="monthlyEquipmentBreakdown">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Seasonal Services (Amortized):</span>
+                    <span id="seasonalBreakdown">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Materials & Supplies:</span>
+                    <span id="materialsBreakdown">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Add-on Services:</span>
+                    <span id="addonBreakdown">$0</span>
+                </div>
+                <div class="breakdown-line total">
+                    <span>Total Cost to CW:</span>
+                    <span id="totalCostBreakdown">$0</span>
+                </div>
+            </div>
+
+            <div class="breakdown-card">
+                <h4>City Wide Pricing</h4>
+                <div class="breakdown-line">
+                    <span>Total Cost to CW:</span>
+                    <span id="cwCostDisplay">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>CW Margin (<span id="marginPercent">35</span>%):</span>
+                    <span id="marginAmount">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Climate Adjustments:</span>
+                    <span id="climateAdjustment">$0</span>
+                </div>
+                <div class="breakdown-line total">
+                    <span>Monthly Client Price:</span>
+                    <span id="finalClientPrice">$0</span>
+                </div>
+                <div class="breakdown-line total">
+                    <span>CW Gross Profit:</span>
+                    <span id="finalGrossProfit">$0</span>
+                </div>
+            </div>
+
+            <div class="breakdown-card">
+                <h4>Annual Contract Summary</h4>
+                <div class="breakdown-line">
+                    <span>Peak Season (7 months):</span>
+                    <span id="peakSeasonTotal">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Off Season (5 months):</span>
+                    <span id="offSeasonTotal">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Annual Seasonals:</span>
+                    <span id="annualSeasonals">$0</span>
+                </div>
+                <div class="breakdown-line total">
+                    <span>Total Annual Contract:</span>
+                    <span id="annualContractTotal">$0</span>
+                </div>
+                <div class="breakdown-line">
+                    <span>Provider Mix:</span>
+                    <span id="providerMixDisplay">Mixed</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="export-section">
+            <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">Export Documentation</h3>
+            <div class="export-buttons">
+                <button class="export-btn" onclick="exportVendorSpecs()">Export Vendor Specifications</button>
+                <button class="export-btn" onclick="exportClientProposal()">Export Client Proposal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize calculations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small delay to ensure all elements are rendered
+            setTimeout(() => {
+                updateICBreakdown();
+                updateCalculations();
+            }, 100);
+        });
+
+        function toggleProvider(category, type) {
+            const vendorBtn = document.querySelector(`[data-category="${category}"] .vendor-btn`);
+            const inhouseBtn = document.querySelector(`[data-category="${category}"] .inhouse-btn`);
+            
+            if (type === 'vendor') {
+                vendorBtn.classList.add('active');
+                inhouseBtn.classList.remove('active');
+            } else {
+                inhouseBtn.classList.add('active');
+                vendorBtn.classList.remove('active');
+            }
+            
+            updateCalculations();
+        }
+
+        function updateICBreakdown() {
+            const rawRate = parseFloat(document.getElementById('rawLaborRate').value) || 20.00;
+            const stateTax = parseFloat(document.getElementById('stateTaxRate').value) || 0.00;
+            const icProfitRate = parseFloat(document.getElementById('icProfitRate').value) || 10.0;
+            
+            const fica = rawRate * 0.0765;
+            const futa = rawRate * 0.0060;
+            const workComp = rawRate * 0.0250;
+            const gl = rawRate * 0.0050;
+            const stateTaxAmount = rawRate * (stateTax / 100);
+            
+            const subtotal = rawRate + fica + futa + workComp + gl + stateTaxAmount;
+            const icProfitAmount = subtotal * (icProfitRate / 100);
+            const icLoadedRate = subtotal + icProfitAmount;
+            
+            document.getElementById('rawRateDisplay').textContent = formatCurrencyDetailed(rawRate);
+            document.getElementById('ficaDisplay').textContent = formatCurrencyDetailed(fica);
+            document.getElementById('futaDisplay').textContent = formatCurrencyDetailed(futa);
+            document.getElementById('workCompDisplay').textContent = formatCurrencyDetailed(workComp);
+            document.getElementById('glDisplay').textContent = formatCurrencyDetailed(gl);
+            document.getElementById('stateTaxDisplay').textContent = formatCurrencyDetailed(stateTaxAmount);
+            document.getElementById('subtotalDisplay').textContent = formatCurrencyDetailed(subtotal);
+            document.getElementById('icProfitDisplay').textContent = formatCurrencyDetailed(icProfitAmount);
+            document.getElementById('icLoadedRateDisplay').textContent = formatCurrencyDetailed(icLoadedRate);
+            
+            updateCalculations();
+        }
+
+        function updateCalculations() {
+            try {
+                // Check if DOM elements exist before proceeding
+                if (!document.getElementById('propertyType') || 
+                    !document.querySelector('[data-category="labor"] .vendor-btn')) {
+                    return; // Exit if DOM not ready
+                }
+
+                // Get base inputs
+                const propertyType = document.getElementById('propertyType').value;
+                const totalAcres = parseFloat(document.getElementById('totalAcres').value) || 1;
+                const turfPercentage = parseFloat(document.getElementById('turfPercentage').value) || 0;
+                const desertPercentage = parseFloat(document.getElementById('desertPercentage').value) || 100;
+                const shrubLinearFeet = parseFloat(document.getElementById('shrubLinearFeet').value) || 0;
+                const palmTrees = parseFloat(document.getElementById('palmTrees').value) || 0;
+                const smallTrees = parseFloat(document.getElementById('smallTrees').value) || 0;
+                const rockArea = parseFloat(document.getElementById('rockArea').value) || 0;
+                
+                // Get multipliers
+                const propertyMultipliers = {
+                    office: 1.0, retail: 1.2, medical: 1.4, hotel: 1.6,
+                    industrial: 0.8, restaurant: 1.3, multiacre: 1.1
+                };
+                const propertyMultiplier = propertyMultipliers[propertyType] || 1.0;
+                const accessMultiplier = parseFloat(document.getElementById('accessDifficulty').value) || 1.0;
+                const qualityMultiplier = parseFloat(document.getElementById('qualityLevel').value) || 1.0;
+                
+                // Calculate weekly hours by task
+                const turfAcres = totalAcres * (turfPercentage / 100);
+                const desertAcres = totalAcres * (desertPercentage / 100);
+                
+                // Production rates (hours per unit)
+                const mowingHours = turfAcres * 0.75; // 45 min per acre for turf mowing
+                const shrubHours = (shrubLinearFeet / 100) * 0.5; // 30 min per 100 linear feet
+                const cleanupHours = Math.max(1.0, totalAcres * 0.5); // 30 min per acre minimum 1 hour
+                const desertHours = desertAcres * 0.25; // 15 min per acre for desert maintenance
+                const irrigationHours = document.getElementById('irrigation').checked ? totalAcres * 0.2 : 0;
+                
+                const baseWeeklyHours = (mowingHours + shrubHours + cleanupHours + desertHours + irrigationHours) 
+                    * propertyMultiplier * accessMultiplier * qualityMultiplier;
+                
+                // Get labor rates with null checks
+                const crewSize = parseInt(document.getElementById('crewSize').value) || 3;
+                const icLoadedRate = calculateICLoadedRate();
+                
+                const laborVendorBtn = document.querySelector('[data-category="labor"] .vendor-btn');
+                const isLaborVendor = laborVendorBtn ? laborVendorBtn.classList.contains('active') : true;
+                const laborRate = isLaborVendor ? icLoadedRate : calculateInHouseLoadedRate();
+                const timeMultiplier = parseFloat(document.getElementById('timeOfService').value) || 1.0;
+                
+                const weeklyLaborCost = baseWeeklyHours * crewSize * laborRate * timeMultiplier;
+                
+                // Equipment costs with null checks
+                const equipmentHourlyRate = parseFloat(document.getElementById('equipmentHourlyRate').value) || 45;
+                const fuelSurcharge = parseFloat(document.getElementById('fuelSurcharge').value) || 8;
+                
+                const equipmentVendorBtn = document.querySelector('[data-category="equipment"] .vendor-btn');
+                const isEquipmentVendor = equipmentVendorBtn ? equipmentVendorBtn.classList.contains('active') : true;
+                
+                let equipmentBaseCost = baseWeeklyHours * equipmentHourlyRate;
+                equipmentBaseCost *= (1 + fuelSurcharge / 100);
+                const weeklyEquipmentCost = calculateProviderCost('equipment', equipmentBaseCost);
+                
+                // Seasonal services (amortized monthly)
+                const springPlanting = parseFloat(document.getElementById('springPlanting').value) || 0;
+                const fallPlanting = parseFloat(document.getElementById('fallPlanting').value) || 0;
+                const palmTrimming = parseFloat(document.getElementById('palmTrimming').value) || 0;
+                const treePruning = parseFloat(document.getElementById('treePruning').value) || 0;
+                const rockRefresh = parseFloat(document.getElementById('rockRefresh').value) || 0;
+                const irrigationRepairs = parseFloat(document.getElementById('irrigationRepairs').value) || 0;
+                
+                const annualSeasonalCosts = springPlanting + fallPlanting + palmTrimming + treePruning + rockRefresh + irrigationRepairs;
+                const monthlySeasonalCosts = calculateProviderCost('seasonal', annualSeasonalCosts / 12);
+                
+                // Material costs
+                const mulchCubicYards = parseFloat(document.getElementById('mulchCubicYards').value) || 0;
+                const mulchPricePerYard = parseFloat(document.getElementById('mulchPricePerYard').value) || 0;
+                const fertApplications = parseFloat(document.getElementById('fertApplications').value) || 0;
+                const fertCostPerApp = parseFloat(document.getElementById('fertCostPerApp').value) || 0;
+                
+                const annualMulchCost = mulchCubicYards * mulchPricePerYard;
+                const annualFertCost = fertApplications * fertCostPerApp;
+                const monthlyMaterialsCost = calculateProviderCost('materials', (annualMulchCost + annualFertCost) / 12);
+                
+                // Add-on services with null checks
+                let monthlyAddons = 0;
+                const irrigationCheck = document.getElementById('irrigation');
+                const pestControlCheck = document.getElementById('pestControl');
+                const fertProgramCheck = document.getElementById('fertProgram');
+                const trashRemovalCheck = document.getElementById('trashRemoval');
+                const waterComplianceCheck = document.getElementById('waterCompliance');
+                const plantHealthCheck = document.getElementById('plantHealth');
+                
+                if (irrigationCheck && irrigationCheck.checked) monthlyAddons += 200;
+                if (pestControlCheck && pestControlCheck.checked) monthlyAddons += 150;
+                if (fertProgramCheck && fertProgramCheck.checked) monthlyAddons += 180;
+                if (trashRemovalCheck && trashRemovalCheck.checked) monthlyAddons += 120;
+                if (waterComplianceCheck && waterComplianceCheck.checked) monthlyAddons += 100;
+                if (plantHealthCheck && plantHealthCheck.checked) monthlyAddons += 160;
+                
+                // Convert weekly to monthly costs (4.33 weeks per month)
+                const monthlyLaborCost = weeklyLaborCost * 4.33;
+                const monthlyEquipmentCost = weeklyEquipmentCost * 4.33;
+                
+                // Calculate total cost to City Wide
+                const totalMonthlyCost = monthlyLaborCost + monthlyEquipmentCost + monthlySeasonalCosts + monthlyMaterialsCost + monthlyAddons;
+                
+                // Apply City Wide margin
+                const cityWideMargin = parseFloat(document.getElementById('cityWideMargin').value) || 35;
+                const extremeHeatAdjustment = parseFloat(document.getElementById('extremeHeatAdjustment').value) || 15;
+                
+                let monthlyClientPrice = totalMonthlyCost / (1 - cityWideMargin / 100);
+                monthlyClientPrice *= (1 + extremeHeatAdjustment / 100);
+                
+                const grossProfit = monthlyClientPrice - totalMonthlyCost;
+                const pricePerAcre = monthlyClientPrice / totalAcres;
+                
+                // Update displays with null checks
+                const weeklyHoursEl = document.getElementById('weeklyHours');
+                const weeklyLaborCostEl = document.getElementById('weeklyLaborCost');
+                const weeklyEquipmentCostEl = document.getElementById('weeklyEquipmentCost');
+                const monthlyMaterialsCostEl = document.getElementById('monthlyMaterialsCost');
+                const totalMonthlyCostEl = document.getElementById('totalMonthlyCost');
+                const pricePerAcreEl = document.getElementById('pricePerAcre');
+                const monthlyClientPriceEl = document.getElementById('monthlyClientPrice');
+                const grossProfitEl = document.getElementById('grossProfit');
+                
+                if (weeklyHoursEl) weeklyHoursEl.textContent = baseWeeklyHours.toFixed(1);
+                if (weeklyLaborCostEl) weeklyLaborCostEl.textContent = formatCurrency(weeklyLaborCost);
+                if (weeklyEquipmentCostEl) weeklyEquipmentCostEl.textContent = formatCurrency(weeklyEquipmentCost);
+                if (monthlyMaterialsCostEl) monthlyMaterialsCostEl.textContent = formatCurrency(monthlyMaterialsCost);
+                if (totalMonthlyCostEl) totalMonthlyCostEl.textContent = formatCurrency(totalMonthlyCost);
+                if (pricePerAcreEl) pricePerAcreEl.textContent = formatCurrency(pricePerAcre);
+                if (monthlyClientPriceEl) monthlyClientPriceEl.textContent = formatCurrency(monthlyClientPrice);
+                if (grossProfitEl) grossProfitEl.textContent = formatCurrency(grossProfit);
+                
+                // Update breakdown displays
+                document.getElementById('mowingHours').textContent = mowingHours.toFixed(1) + ' hrs';
+                document.getElementById('shrubHours').textContent = shrubHours.toFixed(1) + ' hrs';
+                document.getElementById('cleanupHours').textContent = cleanupHours.toFixed(1) + ' hrs';
+                document.getElementById('desertHours').textContent = desertHours.toFixed(1) + ' hrs';
+                document.getElementById('irrigationHours').textContent = irrigationHours.toFixed(1) + ' hrs';
+                document.getElementById('totalWeeklyHours').textContent = baseWeeklyHours.toFixed(1) + ' hrs';
+                
+                document.getElementById('monthlyLaborBreakdown').textContent = formatCurrency(monthlyLaborCost);
+                document.getElementById('monthlyEquipmentBreakdown').textContent = formatCurrency(monthlyEquipmentCost);
+                document.getElementById('seasonalBreakdown').textContent = formatCurrency(monthlySeasonalCosts);
+                document.getElementById('materialsBreakdown').textContent = formatCurrency(monthlyMaterialsCost);
+                document.getElementById('addonBreakdown').textContent = formatCurrency(monthlyAddons);
+                document.getElementById('totalCostBreakdown').textContent = formatCurrency(totalMonthlyCost);
+                
+                document.getElementById('cwCostDisplay').textContent = formatCurrency(totalMonthlyCost);
+                document.getElementById('marginPercent').textContent = cityWideMargin;
+                document.getElementById('marginAmount').textContent = formatCurrency(grossProfit);
+                document.getElementById('climateAdjustment').textContent = formatCurrency(monthlyClientPrice * (extremeHeatAdjustment / 100) / (1 + extremeHeatAdjustment / 100));
+                document.getElementById('finalClientPrice').textContent = formatCurrency(monthlyClientPrice);
+                document.getElementById('finalGrossProfit').textContent = formatCurrency(grossProfit);
+                
+                // Annual contract summary
+                const seasonalVariation = document.getElementById('seasonalVariation').value;
+                let peakSeasonTotal, offSeasonTotal;
+                
+                if (seasonalVariation === 'seasonal') {
+                    peakSeasonTotal = monthlyClientPrice * 1.15 * 7; // 7 peak months, 15% premium
+                    offSeasonTotal = monthlyClientPrice * 0.7 * 5; // 5 off months, 30% reduction
+                } else {
+                    peakSeasonTotal = monthlyClientPrice * 7;
+                    offSeasonTotal = monthlyClientPrice * 5;
+                }
+                
+                const annualContractTotal = peakSeasonTotal + offSeasonTotal;
+                
+                document.getElementById('peakSeasonTotal').textContent = formatCurrency(peakSeasonTotal);
+                document.getElementById('offSeasonTotal').textContent = formatCurrency(offSeasonTotal);
+                document.getElementById('annualSeasonals').textContent = formatCurrency(annualSeasonalCosts);
+                document.getElementById('annualContractTotal').textContent = formatCurrency(annualContractTotal);
+                
+                // Provider mix display
+                const laborProvider = document.querySelector('[data-category="labor"] .vendor-btn').classList.contains('active') ? 'Vendor' : 'In-House';
+                const equipmentProvider = document.querySelector('[data-category="equipment"] .vendor-btn').classList.contains('active') ? 'Vendor' : 'In-House';
+                const materialsProvider = document.querySelector('[data-category="materials"] .vendor-btn').classList.contains('active') ? 'Vendor' : 'In-House';
+                document.getElementById('providerMixDisplay').textContent = `L:${laborProvider.charAt(0)} E:${equipmentProvider.charAt(0)} M:${materialsProvider.charAt(0)}`;
+                
+            } catch (error) {
+                console.error('Calculation error:', error);
+            }
+        }
+
+        function calculateICLoadedRate() {
+            const rawRate = parseFloat(document.getElementById('rawLaborRate').value) || 20.00;
+            const stateTax = parseFloat(document.getElementById('stateTaxRate').value) || 0.00;
+            const icProfitRate = parseFloat(document.getElementById('icProfitRate').value) || 10.0;
+            
+            const fica = rawRate * 0.0765;
+            const futa = rawRate * 0.0060;
+            const workComp = rawRate * 0.0250;
+            const gl = rawRate * 0.0050;
+            const stateTaxAmount = rawRate * (stateTax / 100);
+            
+            const subtotal = rawRate + fica + futa + workComp + gl + stateTaxAmount;
+            const icProfitAmount = subtotal * (icProfitRate / 100);
+            
+            return subtotal + icProfitAmount;
+        }
+
+        function calculateInHouseLoadedRate() {
+            const rawRate = parseFloat(document.getElementById('rawLaborRate').value) || 20.00;
+            const stateTax = parseFloat(document.getElementById('stateTaxRate').value) || 0.00;
+            
+            const fica = rawRate * 0.0765;
+            const futa = rawRate * 0.0060;
+            const workComp = rawRate * 0.0250;
+            const gl = rawRate * 0.0050;
+            const stateTaxAmount = rawRate * (stateTax / 100);
+            
+            return rawRate + fica + futa + workComp + gl + stateTaxAmount;
+        }
+
+        function calculateProviderCost(category, baseCost) {
+            const vendorBtn = document.querySelector(`[data-category="${category}"] .vendor-btn`);
+            const isVendor = vendorBtn ? vendorBtn.classList.contains('active') : true; // Default to vendor if not found
+            const margin = parseFloat(document.getElementById('cityWideMargin').value) || 35;
+            
+            if (isVendor) {
+                const costWithICProfit = baseCost * 1.10; // +10% IC profit
+                return costWithICProfit / (1 - margin / 100);
+            } else {
+                return baseCost / (1 - margin / 100); // No IC profit for in-house
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatCurrencyDetailed(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        function exportVendorSpecs() {
+            const totalAcres = parseFloat(document.getElementById('totalAcres').value) || 1;
+            const crewSize = parseInt(document.getElementById('crewSize').value) || 3;
+            const weeklyHours = parseFloat(document.getElementById('weeklyHours').textContent) || 0;
+            const propertyType = document.getElementById('propertyType').selectedOptions[0].textContent;
+            
+            const content = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+{\\f0\\fs24 VENDOR SPECIFICATIONS - COMMERCIAL LANDSCAPING MAINTENANCE\\par\\par
+
+Property Details:\\par
+- Property Type: ${propertyType}\\par
+- Total Acreage: ${totalAcres} acres\\par
+- Crew Size Required: ${crewSize} people\\par
+- Weekly Hours: ${weeklyHours.toFixed(1)} hours\\par\\par
+
+Weekly Service Requirements:\\par
+1. Mowing and edging of all turf areas using commercial equipment\\par
+2. Shrub and hedge trimming to maintain neat appearance\\par
+3. Blowing and debris cleanup of all hardscape areas\\par
+4. Desert landscaping maintenance including weed removal\\par
+5. Basic irrigation system monitoring and minor repairs under $250\\par\\par
+
+Equipment Specifications:\\par
+- Commercial zero-turn mowers (60+ inch cutting deck)\\par
+- Professional trimming equipment\\par
+- Commercial backpack blowers\\par
+- Basic irrigation repair tools and parts inventory\\par\\par
+
+Quality Standards:\\par
+- Professional appearance maintenance at all times\\par
+- Compliance with Nevada water regulations (SNWA/TMWA)\\par
+- Prompt response to property management requests\\par
+- Detailed service logs and photo documentation\\par\\par
+
+Safety Requirements:\\par
+- All equipment operators must be properly trained\\par
+- Safety equipment required (eye protection, hearing protection)\\par
+- Valid Nevada pesticide license for chemical applications\\par
+- Current general liability and workers compensation insurance\\par\\par
+
+Schedule:\\par
+- Weekly service visits during growing season\\par
+- Modified schedule during winter months\\par
+- Work hours: 5:00 AM to 10:00 AM during summer months\\par
+- Flexibility for weather delays and special events\\par
+}}`;
+
+            downloadRTF(content, 'landscaping-vendor-specifications.rtf');
+        }
+
+        function exportClientProposal() {
+            const monthlyPrice = document.getElementById('monthlyClientPrice').textContent;
+            const annualTotal = document.getElementById('annualContractTotal').textContent;
+            const totalAcres = parseFloat(document.getElementById('totalAcres').value) || 1;
+            const propertyType = document.getElementById('propertyType').selectedOptions[0].textContent;
+            
+            const content = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}
+{\\f0\\fs24 COMMERCIAL LANDSCAPING MAINTENANCE PROPOSAL\\par\\par
+
+Property Information:\\par
+- Property Type: ${propertyType}\\par
+- Total Property Size: ${totalAcres} acres\\par\\par
+
+Service Overview:\\par
+Our comprehensive commercial landscaping maintenance program provides weekly service visits to maintain your property's professional appearance while ensuring compliance with Nevada water regulations.\\par\\par
+
+Weekly Services Include:\\par
+- Professional mowing and edging of all turf areas\\par
+- Shrub and hedge trimming to maintain proper size and shape\\par
+- Thorough blowing and cleanup of all walkways, parking areas, and entrance zones\\par
+- Desert landscaping maintenance including weed control and rock area grooming\\par
+- Basic irrigation system monitoring with minor repairs included (under $250)\\par
+- Trash and debris removal from landscaped areas\\par\\par
+
+Seasonal Services (Included):\\par
+- Spring and fall seasonal plantings\\par
+- Annual palm tree trimming and maintenance\\par
+- Tree pruning and health maintenance\\par
+- Rock and decomposed granite area refresh\\par
+- Comprehensive fertilization program\\par\\par
+
+Nevada Water Compliance:\\par
+- Full compliance with SNWA/TMWA watering restrictions\\par
+- Smart irrigation controller management\\par
+- Water conservation monitoring and reporting\\par
+- Preparation for 2027 nonfunctional turf requirements\\par\\par
+
+Investment:\\par
+Monthly Service Fee: ${monthlyPrice}\\par
+Annual Contract Total: ${annualTotal}\\par\\par
+
+This proposal includes all labor, equipment, materials, and seasonal services for a complete maintenance program. Pricing is structured with seasonal variations to reflect Nevada's climate patterns, with higher activity during growing season and reduced service during winter months.\\par\\par
+
+Why Choose Our Service:\\par
+- Licensed and insured Nevada landscaping professionals\\par
+- Specialized expertise in desert and traditional commercial landscaping\\par
+- Proactive approach to water regulation compliance\\par
+- Comprehensive program eliminates need for multiple vendors\\par
+- Responsive communication and detailed service documentation\\par\\par
+
+Next Steps:\\par
+We are prepared to begin service immediately upon contract execution. Our team will conduct a detailed site assessment to finalize all specifications and coordinate with your property management team for seamless service delivery.\\par
+}}`;
+
+            downloadRTF(content, 'landscaping-client-proposal.rtf');
+        }
+
+        function downloadRTF(content, filename) {
+            const blob = new Blob([content], { type: 'application/rtf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
