@@ -194,7 +194,7 @@ body{
       <div class="cfield"><label>Materials Provided By</label>
         <select id="matProvider" onchange="recalc()">
           <option value="vendor">Crew Provides (their cost + 15%)</option>
-          <option value="cw">City Wide (at our cost)</option>
+          <option value="cw">City Wide Supplies</option>
         </select>
       </div>
       <div class="cfield"><label>Override Margin % (blank = auto by job size)</label>
@@ -221,7 +221,7 @@ body{
           <div id="svcList"></div>
         </div>
         <div class="card" id="shopCard" style="display:none">
-          <h2>Materials &amp; Pass-Throughs for This Account</h2>
+          <h2>Materials &amp; Other Cost Lines for This Account</h2>
           <p style="font-size:11.5px;color:var(--cw-grey);margin-bottom:10px">What this account consumes in a year, by item. Seeded from 2026 street prices: double-check big lines before committing and update the Rate Book if a price moved.</p>
           <div id="shopList"></div>
         </div>
@@ -346,7 +346,7 @@ const CONDITIONS=[{k:'good',label:'Maintained',f:1},{k:'behind',label:'Behind (c
 */
 const SERVICES=[
  {id:'grounds', name:'Base Grounds Maintenance', sub:'The recurring visit: mow, trim, edge, blow, bed policing, shrub care, litter', ico:'mow', mode:'monthly', wageKey:'crew', equip:EQUIP.mow,
-  flatLabel:'Flat Pass-Through $/yr (dump fees, gate keys, trip charges)',
+  flatLabel:'Other Costs $/yr (dump fees, gate keys, trip charges)',
   desc:'Scheduled grounds visits covering turf care (mow, string trim, hard edge, blow), desert bed policing and rake-back, shrub pruning on a rotation, weed pull in beds, and litter pickup across the property. This is the backbone service of the monthly contract.',
   fields:[
    {k:'turf',label:'Turf Area (SF)',src:'map',ph:'0',small:'Functional turf only. Measure it on Google Earth.'},
@@ -355,7 +355,8 @@ const SERVICES=[
    {k:'visits',label:'Visits per Year',src:'ask',type:'select',opts:VISIT_PLANS,small:'Prepopulated by region. Match the schedule the property expects.'},
    {k:'trims',label:'Shrub Trim Cycles per Year',src:'ask',type:'select',opts:[[8,'8 (showcase)'],[6,'6 (LV standard)'],[4,'4 (NNV standard)'],[2,'2 (basic)']],small:'Desert shrubs get shaped every 4-8 weeks in season.'},
    {k:'cond',label:'Condition',src:'walk',type:'select',opts:[['good','Maintained'],['behind','Behind (catch-up season)'],['neglect','Neglected takeover (first year)']],small:'A neglected takeover also needs the One-Time Cleanup service below.'},
-   {k:'fixed',label:'Fixed Minutes per Visit',src:'walk',ph:'20',small:'Unload, police litter, blow walks, load. Big or gated sites run longer.'}
+   {k:'fixed',label:'Fixed Minutes per Visit',src:'walk',ph:'20',small:'Unload, police litter, blow walks, load. Big or gated sites run longer.'},
+   {k:'crew',label:'Crew Size',src:'ask',type:'select',opts:[[2,'2-person crew'],[3,'3-person crew (standard)'],[4,'4-person crew'],[5,'5-person crew']],small:'Hours are hours, so this does not move the price. It sets the on-site time shown below so the schedule passes the smell test.'}
   ],
   compute:function(st,region,RB){
    const turf=num(st.turf,0), beds=num(st.beds,0), shrubs=num(st.shrubs,0);
@@ -366,16 +367,17 @@ const SERVICES=[
    const visitHrs=perVisit*visits;
    const shrubHrs=shrubs/RB.shrubRate.v*trims;
    const manHrs=(visitHrs+shrubHrs)*condF;
+   const crew=num(st.crew,3);
    const acres=(turf+beds)/43560;
    const tShare=(turf+beds)?turf/(turf+beds):0;
    return {manHrs, matLines:[], equipHrs:manHrs, events:1,
      unitQty:acres, unitName:'acre/mo', unitDiv:12,
      mktLo:250+(tShare*550), mktHi:900+(tShare*800),
-     detail:perVisit>0? (perVisit*condF).toFixed(1)+' crew-hrs per visit x '+visits+' visits + '+(shrubHrs*condF).toFixed(0)+' hrs/yr shrub cycles':''};
+     detail:perVisit>0? (perVisit*condF).toFixed(1)+' man-hrs per visit ('+crew+'-person crew, about '+((perVisit*condF)/crew).toFixed(1)+' hrs on site) x '+visits+' visits + '+(shrubHrs*condF).toFixed(0)+' hrs/yr shrub cycles':''};
   }},
- {id:'irr', name:'Irrigation Management', sub:'Monthly wet checks, controller programming, minor repairs, parts at cost', ico:'drip', mode:'monthly', wageKey:'irr', equip:EQUIP.irr,
-  flatLabel:'Parts Budget $/mo (heads, emitters, valves, passed through at cost)',
-  desc:'Monthly wet check of every zone, controller programming and seasonal adjustment, drip emitter and head repairs as they are found, and a parts budget passed through at cost. In the desert the irrigation system IS the landscape: this service protects the whole plant investment.',
+ {id:'irr', name:'Irrigation Management', sub:'Monthly wet checks, controller programming, minor repairs, parts budget', ico:'drip', mode:'monthly', wageKey:'irr', equip:EQUIP.irr,
+  flatLabel:'Parts Budget $/yr (heads, emitters, valves)',
+  desc:'Monthly wet check of every zone, controller programming and seasonal adjustment, drip emitter and head repairs as they are found, and an annual parts budget priced into the monthly. In the desert the irrigation system IS the landscape: this service protects the whole plant investment.',
   fields:[
    {k:'ctrl',label:'Controllers',src:'walk',ph:'1',small:'Count the clocks. Ask the PM where they all are, there is always one more.'},
    {k:'zones',label:'Total Zones (valves)',src:'walk',ph:'0',small:'Count at the controllers or from as-builts. Estimate 1 zone per 2,500-4,000 SF of planted area if unknown.'},
@@ -391,10 +393,10 @@ const SERVICES=[
    const manHrs=inspect+rep;
    return {manHrs, matLines:[], equipHrs:manHrs, events:1,
      unitQty:zones, unitName:'zone/mo', unitDiv:12, mktLo:6, mktHi:14,
-     detail:inspect.toFixed(0)+' hrs/yr checks + '+rep.toFixed(0)+' hrs/yr repair labor. Parts flow through at cost.'};
+     detail:inspect.toFixed(0)+' hrs/yr checks + '+rep.toFixed(0)+' hrs/yr repair labor. Parts budget prices through the margin chain.'};
   }},
  {id:'weed', name:'Weed Control Program', sub:'Pre-emergent barrier + scheduled post-emergent spray. Licensed applicator work', ico:'spray', mode:'monthly', wageKey:'crew', equip:EQUIP.spray,
-  flatLabel:'Flat Pass-Through $/yr (license, disposal)',
+  flatLabel:'Other Costs $/yr (license, disposal)',
   desc:'Two pre-emergent barrier applications per year across rock and DG areas plus scheduled post-emergent spot spraying. Weeds in rock are the number one desert landscape complaint. Application requires a Nevada certified applicator: verify the crew carries the card.',
   fields:[
    {k:'area',label:'Treated Area (SF)',src:'map',ph:'0',small:'Rock, DG, gravel and hardscape cracks. Usually equals bed area plus parking islands.'},
@@ -412,7 +414,7 @@ const SERVICES=[
      detail:apps+' applications per year across '+area.toLocaleString()+' SF.'};
   }},
  {id:'fert', name:'Turf Fertilization Program', sub:'Scheduled feedings on functional turf', ico:'fert', mode:'monthly', wageKey:'crew', equip:EQUIP.spray,
-  flatLabel:'Flat Pass-Through $/yr',
+  flatLabel:'Other Costs $/yr',
   desc:'Scheduled granular feedings sized to the turf area. Bermuda in Las Vegas feeds through the warm season; fescue in Northern Nevada feeds spring and fall. Priced into the monthly contract.',
   fields:[
    {k:'turf',label:'Turf Area (SF)',src:'map',ph:'0',small:'Same number as the base service turf SF.'},
@@ -428,8 +430,8 @@ const SERVICES=[
      detail:apps+' feedings per year on '+turf.toLocaleString()+' SF of turf.'};
   }},
  {id:'palms', name:'Palm Trimming', sub:'Per palm by height. Once a year, June, after seed pods set', ico:'palm', mode:'peryear', wageKey:'tree', equip:EQUIP.tree,
-  flatLabel:'Lift Rental + Green Waste Haul $ (at cost)',
-  desc:'Annual palm trimming: fronds, seed pods and skirt cleanup, priced per palm by height. Las Vegas standard is one trim per year in June after seed pods set. Tall palms need a lift or certified climber: that cost passes through at cost.',
+  flatLabel:'Lift Rental + Green Waste Haul $ (enter our cost)',
+  desc:'Annual palm trimming: fronds, seed pods and skirt cleanup, priced per palm by height. Las Vegas standard is one trim per year in June after seed pods set. Tall palms need a lift or certified climber: enter that cost and the tool prices it.',
   fields:[
    {k:'n1',label:'Palms under 15 ft',src:'walk',ph:'0',small:''},
    {k:'n2',label:'Palms 15-25 ft',src:'walk',ph:'0',small:''},
@@ -448,7 +450,7 @@ const SERVICES=[
      detail:N+' palms x '+times+'/yr. LV market runs $100-600 per palm by height.'};
   }},
  {id:'trees', name:'Tree Pruning (Non-Palm)', sub:'Ornamentals and shade trees to 25 ft. Bigger trees get an arborist quote', ico:'tree', mode:'peryear', wageKey:'tree', equip:EQUIP.tree,
-  flatLabel:'Green Waste Haul / Lift $ (at cost)',
+  flatLabel:'Green Waste Haul / Lift $ (enter our cost)',
   desc:'Structural and clearance pruning on ornamental and shade trees up to about 25 ft: mesquite, palo verde, ash, oak, flowering pear. Sight lines, sign clearance, and storm-risk thinning. Trees over 25 ft or near power get a certified arborist quote instead.',
   fields:[
    {k:'small',label:'Small Trees (under 15 ft)',src:'walk',ph:'0',small:''},
@@ -465,7 +467,7 @@ const SERVICES=[
      detail:N+' trees x '+times+'/yr.'};
   }},
  {id:'color', name:'Seasonal Color Rotations', sub:'Annual flower beds at entries and monuments', ico:'flower', mode:'peryear', wageKey:'crew', equip:EQUIP.detail,
-  flatLabel:'Flat Pass-Through $ (soil amendments, delivery)',
+  flatLabel:'Other Costs $ (soil amendments, delivery)',
   desc:'Annual flower rotations in entry and monument beds: pull the old set, prep soil, plant, water in. High-visibility color is the cheapest curb appeal a commercial property can buy. Priced per rotation and billed when planted.',
   fields:[
    {k:'sf',label:'Flower Bed Area (SF)',src:'walk',ph:'0',small:'Just the annual color beds, not the whole planter.'},
@@ -481,7 +483,7 @@ const SERVICES=[
      detail:sf+' SF x '+rot+' rotations per year.'};
   }},
  {id:'rock', name:'Rock / DG Top-Dress Refresh', sub:'Bring thin spots back to spec, by the ton', ico:'rock', mode:'once', wageKey:'crew', equip:EQUIP.haul,
-  flatLabel:'Delivery / Equipment Rental $ (at cost)',
+  flatLabel:'Delivery / Equipment Rental $ (enter our cost)',
   desc:'Top-dressing thin and faded rock or decomposed granite back to a 2 inch depth. One ton of 1/2 inch rock covers about 80-100 SF at 2 inches. The refresh that makes a tired desert property look new again.',
   fields:[
    {k:'tons',label:'Tons of Rock / DG',src:'map',ph:'0',small:'Thin area SF divided by 90 is a fair ton estimate. Match the existing color: take a photo to the yard.'}
@@ -495,7 +497,7 @@ const SERVICES=[
      detail:tons+' tons installed.'};
   }},
  {id:'mulch', name:'Mulch Refresh', sub:'Tree wells and planter beds, by the cubic yard', ico:'mulch', mode:'once', wageKey:'crew', equip:EQUIP.haul,
-  flatLabel:'Delivery $ (at cost)',
+  flatLabel:'Delivery $ (enter our cost)',
   desc:'Fresh mulch in tree wells and planter beds. One cubic yard covers about 160 SF at 2 inches. Holds soil moisture, which in this climate is money.',
   fields:[
    {k:'yds',label:'Cubic Yards',src:'map',ph:'0',small:'Bed SF to cover divided by 160.'}
@@ -509,7 +511,7 @@ const SERVICES=[
      detail:yds+' cubic yards installed.'};
   }},
  {id:'leaf', name:'Fall Leaf Cleanup (NNV)', sub:'October through December, by the acre per visit', ico:'leaf', mode:'peryear', wageKey:'crew', equip:EQUIP.mow,
-  flatLabel:'Green Waste Haul $ (at cost)',
+  flatLabel:'Green Waste Haul $ (enter our cost)',
   desc:'Northern Nevada leaf season: blow, gather, haul, repeat. Deciduous canopies drop from October into December. Priced per cleanup visit on the maintained acreage. Las Vegas properties rarely need this as a separate line.',
   fields:[
    {k:'acres',label:'Maintained Acres',src:'map',ph:'0',small:'The landscaped acreage, not the parcel.'},
@@ -524,7 +526,7 @@ const SERVICES=[
      detail:ac+' acres x '+visits+' visits.'};
   }},
  {id:'winter', name:'Irrigation Winterize + Spring Startup (NNV)', sub:'Blowout before the freeze, walk-and-adjust in April', ico:'snow', mode:'peryear', wageKey:'irr', equip:EQUIP.winter,
-  flatLabel:'Compressor Rental $ (at cost)',
+  flatLabel:'Compressor Rental $ (enter our cost)',
   desc:'Compressed-air blowout of every zone before the first hard freeze, then spring startup: pressurize slowly, walk every zone, fix winter damage, reprogram the clock. Skipping this in Reno or Carson costs a mainline. Yearly line item north of the desert.',
   fields:[
    {k:'zones',label:'Total Zones',src:'walk',ph:'0',small:'Same zone count as Irrigation Management.'}
@@ -537,7 +539,7 @@ const SERVICES=[
      detail:zones+' zones: blowout + startup as one yearly package.'};
   }},
  {id:'cleanup', name:'One-Time Cleanup / Takeover Restoration', sub:'Get a neglected property back to maintainable before the contract starts', ico:'broom', mode:'once', wageKey:'crew', equip:EQUIP.haul,
-  flatLabel:'Dump Fees + Bin Rental $ (at cost)',
+  flatLabel:'Dump Fees + Bin Rental $ (enter our cost)',
   desc:'The restoration push before a takeover: cut back overgrowth, clear dead material, first weed knockdown, haul the debris. Sell it as its own project so the monthly contract starts from a maintainable baseline instead of eating six months of catch-up.',
   fields:[
    {k:'hrs',label:'Estimated Crew Man-Hours',src:'walk',ph:'0',small:'Walk it and estimate honestly. A rough half-acre commonly runs 24-40 man-hours.'},
@@ -591,7 +593,7 @@ function priceService(s){
   /* 3. materials */
   const matCost=c.matLines.reduce((a,m)=>a+m.cost,0);
 
-  /* 4. equipment + flat pass-throughs (at cost, no margin) */
+  /* 4. equipment + flat pass-through costs (entered at our cost, margined like everything else) */
   const equipRate=num(st.equip,s.equip);
   const equipCost=c.equipHrs*equipRate;
   const flatCost=num(st.flat,0);
@@ -600,26 +602,27 @@ function priceService(s){
   const matProvider=$('matProvider').value;
   const vendorMat=matProvider==='vendor'?matCost*(1+VENDOR_MAT_MARKUP):0;
   const cwMat=matProvider==='cw'?matCost:0;
-  const vendorBase=laborCost+incCost+equipCost+vendorMat;
+  const vendorBase=laborCost+incCost+equipCost+vendorMat+flatCost;
   const inhouse=($('laborBy')&&$('laborBy').value==='inhouse');
   const vendorCost=inhouse?vendorBase:vendorBase/(1-IC_MARGIN);
   const totalCost=vendorCost+cwMat;
 
-  /* 6. City Wide margin + regional multiplier. Pass-throughs ride at cost. */
+  /* 6. City Wide margin + regional multiplier. Every cost line rides the full margin chain. */
   const ov=parseFloat($('ovMargin').value);
   const svcOv=parseFloat(st.margin);
   const margin=(!isNaN(svcOv)&&svcOv>0)?svcOv:(!isNaN(ov)&&ov>0)?ov:autoMargin(c.manHrs);
-  let price=totalCost/(1-margin/100)*region.mult+flatCost;
+  const flatPriced=(inhouse?flatCost:flatCost/(1-IC_MARGIN))/(1-margin/100)*region.mult;
+  let price=totalCost/(1-margin/100)*region.mult;
   let floored=false;
-  if(c.mktFloor){const fl=c.mktLo*region.mult*c.unitQty*(c.unitDiv||1)+flatCost; if(price<fl){price=fl;floored=true;}}
+  if(c.mktFloor){const fl=c.mktLo*region.mult*c.unitQty*(c.unitDiv||1)+flatPriced; if(price<fl){price=fl;floored=true;}}
   const rateOv=parseFloat(st.rateOv);
   if(!isNaN(rateOv)&&rateOv>0){
-    price=(s.mode==='monthly'?rateOv*12:rateOv*c.unitQty)+flatCost;
+    price=(s.mode==='monthly'?rateOv*12:rateOv*c.unitQty)+flatPriced;
   }
-  const perUnit=c.unitQty?((price-flatCost)/(c.unitDiv||1))/c.unitQty:0;
+  const perUnit=c.unitQty?((price-flatPriced)/(c.unitDiv||1))/c.unitQty:0;
   const mktLo=c.mktLo*region.mult, mktHi=c.mktHi*region.mult;
   const monthly=s.mode==='monthly'?price/12:0;
-  return {s,st,c,wage,laborCost,incCost,matCost,vendorMat,cwMat,equipCost,equipRate,flatCost,vendorBase,vendorCost,inhouse,totalCost,margin,price,monthly,perUnit,mktLo,mktHi,floored};
+  return {s,st,c,wage,laborCost,incCost,matCost,vendorMat,cwMat,equipCost,equipRate,flatCost,flatPriced,vendorBase,vendorCost,inhouse,totalCost,margin,price,monthly,perUnit,mktLo,mktHi,floored};
 }
 function activeResults(){return SERVICES.filter(s=>S.svcOn[s.id]).map(priceService).filter(Boolean);}
 function applyMinimums(results){
@@ -656,6 +659,7 @@ function fieldHtml(s,f,st,region){
       if(f.k==='pre')def=2; if(f.k==='post')def=10; if(f.k==='apps')def=4;
       if(f.k==='rot')def=3; if(f.k==='times')def=1;
       if(f.k==='visits'&&s.id==='leaf')def=4;
+      if(f.k==='crew')def=3;
     }
     inner='<select onchange="setSvc(\''+s.id+'\',\''+f.k+'\',this.value)">'+f.opts.map(o=>'<option value="'+o[0]+'"'+((''+def)===(''+o[0])?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>';
   }else{
@@ -676,7 +680,7 @@ function renderServices(){
       +s.fields.map(f=>fieldHtml(s,f,st,region)).join('')
       +'<div class="field"><label>Crew Wage $/hr'+srcTag('ask')+'</label><input type="number" step="0.5" value="'+(st.wage||'')+'" placeholder="'+region.wages[s.wageKey].toFixed(2)+'" onchange="setSvc(\''+s.id+'\',\'wage\',this.value)"><small>'+(s.wageKey==='irr'?'Irrigation tech rate.':s.wageKey==='tree'?'Tree crew rate.':'Blended crew rate (laborers + lead).')+' Prepopulated for '+region.label+'.</small></div>'
       +'<div class="field"><label>Equipment $/hr</label><input type="number" step="1" value="'+(st.equip||'')+'" placeholder="'+s.equip+'" onchange="setSvc(\''+s.id+'\',\'equip\',this.value)"><small>Truck, trailer, mowers, handhelds, fuel.</small></div>'
-      +'<div class="field"><label>'+s.flatLabel+'</label><input type="number" step="10" value="'+(('flat' in st)?st.flat:'')+'" placeholder="0" onchange="setSvc(\''+s.id+'\',\'flat\',this.value)"><small>Billed at cost. Margin applies to work, not rentals and dump fees.</small></div>'
+      +'<div class="field"><label>'+s.flatLabel+'</label><input type="number" step="10" value="'+(('flat' in st)?st.flat:'')+'" placeholder="0" onchange="setSvc(\''+s.id+'\',\'flat\',this.value)"><small>Enter what it costs us. The tool prices margin on this line like everything else.</small></div>'
       +'<div class="field"><label>'+(s.mode==='monthly'?'Monthly Price Override $':'Price per '+(r?r.c.unitName.split('/')[0]:'unit')+' Override $')+'</label><input type="number" step="0.01" value="'+(st.rateOv||'')+'" placeholder="auto build-up" onchange="setSvc(\''+s.id+'\',\'rateOv\',this.value)"></div>'
       +'<div class="field"><label>Service Margin % Override</label><input type="number" value="'+(st.margin||'')+'" placeholder="auto '+(r?r.margin:'32-40')+'" onchange="setSvc(\''+s.id+'\',\'margin\',this.value)"></div>'
       +'</div>';
@@ -689,9 +693,9 @@ function renderServices(){
         +r.c.matLines.map(m=>'<div class="bl"><span>'+m.label+'</span><b>'+money(m.cost)+'</b></div>').join('')
         +(r.vendorMat&&r.matCost?'<div class="bl"><span>Crew procurement markup on materials ('+(VENDOR_MAT_MARKUP*100)+'%)</span><b>'+money(r.vendorMat-r.matCost)+'</b></div>':'')
         +'<div class="bl"><span>Equipment fee ('+r.c.equipHrs.toFixed(1)+' hrs @ $'+r.equipRate+'/hr)</span><b>'+money(r.equipCost)+'</b></div>'
+        +(r.flatCost?'<div class="bl"><span>Other costs (margin applies)</span><b>'+money(r.flatCost)+'</b></div>':'')
         +(r.inhouse?'':'<div class="bl"><span>Crew company margin ('+(IC_MARGIN*100).toFixed(0)+'% of their check, Bid Calculator math)</span><b>'+money(r.vendorCost-r.vendorBase)+'</b></div>')
         +'<div class="bl tot"><span>'+(r.inhouse?'In-house crew cost':'We pay the crew')+(r.cwMat?' (City Wide supplies materials: '+money(r.cwMat)+')':'')+'</span><b>'+money(r.totalCost)+'</b></div>'
-        +(r.flatCost?'<div class="bl"><span>Pass-through at cost</span><b>'+money(r.flatCost)+'</b></div>':'')
         +'<div class="bl tot" style="color:var(--cw-red)"><span>'+(r.s.mode==='monthly'?'Annual @ '+r.margin+'% margin x '+REGIONS[$('region').value].mult.toFixed(2)+' regional = '+money(r.price)+'</span><b>'+money(r.price/12)+'/mo</b>':'Client price @ '+r.margin+'% margin x '+REGIONS[$('region').value].mult.toFixed(2)+' regional</span><b>'+money(r.price)+(r.s.mode==='peryear'?'/yr':'')+'</b>')+'</div>'
         +(r.floored?'<div class="bl mkt"><span>Cost build-up came in under market. Priced at the market floor: type a per-unit override to price it differently.</span></div>':'')
         +'<div class="bl mkt"><span>2026 market check: '+money2(r.mktLo)+'-'+money2(r.mktHi)+' per '+r.c.unitName+' here (this quote: '+money2(r.perUnit)+'). '+flag+'</span></div>'
@@ -723,14 +727,14 @@ function howTo(s){
    irr:'<h4>The wet check</h4><ol><li>Run every zone from the controller, walk it while it runs.</li><li>Flag broken heads, clogged emitters, geysers, dry spots, overspray on windows and stucco.</li><li>Fix the small stuff on the spot from truck stock. Photograph anything bigger and quote it.</li><li>Set the seasonal percentage. SNWA and TMWA both publish watering schedules: matching the clock to the rules is part of the service.</li></ol><div class="warnbox">In the desert the irrigation system is the landscape. A $3 emitter left clogged kills a $300 plant. That is the pitch for monthly checks, and it is true.</div>',
    weed:'<h4>The program</h4><ol><li>Pre-emergent in late winter (Feb) and again late summer stops weeds before they sprout in the rock.</li><li>Scheduled post-emergent spot sprays catch what breaks through.</li><li>After a wet winter, budget extra: seed load explodes.</li></ol><div class="warnbox">Nevada requires a certified applicator (NDA license) for commercial herbicide work. Verify the crew carries the card before you sell the program. Fines land on everyone.</div>',
    fert:'<h4>Timing</h4><ul><li>LV bermuda: feed through the warm season, April to September.</li><li>NNV fescue/bluegrass: spring and fall feedings, skip the July stress window.</li></ul>',
-   palms:'<h4>How to count</h4><ol><li>Count palms by height band on the walk. Storefronts run 10-12 ft: use that as your ruler.</li><li>June is the month. One trim after seed pods set covers the year for most species.</li><li>Anything over 40 ft needs a lift or a certified climber. Get the lift cost and pass it through at cost.</li></ol><div class="warnbox">Palm skinning (stripping the old frond bases) is a separate quoted job, not part of the annual trim. Market runs $100-600 per palm by height in LV. Bundling 10+ palms is how you win the account: the mobilization spreads.</div>',
+   palms:'<h4>How to count</h4><ol><li>Count palms by height band on the walk. Storefronts run 10-12 ft: use that as your ruler.</li><li>June is the month. One trim after seed pods set covers the year for most species.</li><li>Anything over 40 ft needs a lift or a certified climber. Get the lift cost and put it in the Other Costs box: the tool prices it with margin like everything else.</li></ol><div class="warnbox">Palm skinning (stripping the old frond bases) is a separate quoted job, not part of the annual trim. Market runs $100-600 per palm by height in LV. Bundling 10+ palms is how you win the account: the mobilization spreads.</div>',
    trees:'<h4>Scope line</h4><p>This service covers ornamentals and shade trees to about 25 ft: clearance, structure, storm thinning. Over 25 ft, near power lines, or removals: stop and get a certified arborist quote. That is specialist work with specialist insurance.</p>',
    color:'<h4>Selling it</h4><p>Color goes where eyes go: entries, monuments, leasing offices. Two hundred SF of flowers at the entrance does more for curb appeal than an acre of shrubs. Price per rotation and put the schedule in the contract.</p>',
    rock:'<h4>Estimating tons</h4><ol><li>Measure the thin areas on the map. SF divided by 90 gives tons at a 2 inch top-dress.</li><li>Photograph the existing rock and match color and size at the yard. A mismatched patch looks worse than a thin one.</li></ol>',
    mulch:'<h4>Estimating yards</h4><p>Bed SF to cover divided by 160 gives cubic yards at 2 inches. Keep mulch off trunks and away from irrigation heads.</p>',
    leaf:'<h4>The season</h4><p>October into December in Reno, Sparks and Carson. Sell it as a fixed number of fall visits, not open-ended hours. Heavy canopy properties (older office parks with ash and cottonwood) run 6 visits.</p>',
    winter:'<h4>Why it is not optional</h4><ol><li>Blow out every zone with compressed air before the first hard freeze (late October in Carson, early November in Reno).</li><li>Spring startup: pressurize slowly, walk every zone, fix winter splits, reset the controller.</li></ol><div class="warnbox">A skipped blowout costs a cracked mainline or backflow, and commercial backflow assemblies run four figures to replace. This line item is insurance that pays for itself the first winter.</div>',
-   cleanup:'<h4>Scoping the takeover</h4><ol><li>Walk the whole property. Count truckloads of debris, note dead plants, overgrowth, and irrigation damage.</li><li>Estimate crew man-hours honestly. A rough half-acre commonly runs 24-40.</li><li>Get dump fees and bin rental as pass-through numbers.</li></ol><div class="warnbox">Never fold restoration into the monthly price. The monthly contract assumes a maintainable property. Sell the cleanup as a project, then the contract starts clean for both sides.</div>'
+   cleanup:'<h4>Scoping the takeover</h4><ol><li>Walk the whole property. Count truckloads of debris, note dead plants, overgrowth, and irrigation damage.</li><li>Estimate crew man-hours honestly. A rough half-acre commonly runs 24-40.</li><li>Get dump fees and bin rental numbers on the walk: they go in the Other Costs box and price like everything else.</li></ol><div class="warnbox">Never fold restoration into the monthly price. The monthly contract assumes a maintainable property. Sell the cleanup as a project, then the contract starts clean for both sides.</div>'
   };
   return H[s.id]?'<details class="howto"><summary>How to measure &amp; quote this</summary><div class="hbody">'+H[s.id]+'</div></details>':'';
 }
@@ -740,7 +744,7 @@ function renderShopping(results){
   const items=[];
   results.forEach(r=>{
     r.c.matLines.forEach(m=>items.push({svc:r.s.name,label:m.label,cost:m.cost}));
-    if(r.flatCost)items.push({svc:r.s.name,label:'Pass-through (at cost)',cost:r.flatCost});
+    if(r.flatCost)items.push({svc:r.s.name,label:'Other costs (margin applies)',cost:r.flatCost});
   });
   if(!items.length){$('shopCard').style.display='none';return;}
   $('shopCard').style.display='';
@@ -891,7 +895,7 @@ function renderRates(){
   +'<tr><td>Crew company margin</td><td>'+(IC_MARGIN*100)+'%</td><td>Margin basis, cost divided by 0.92: the crew keeps 8% of their check, exactly like the Bid Calculator IC margin line.</td></tr>'
   +'<tr><td>City Wide margin</td><td>32-40%</td><td>Auto by annual job hours, divide basis. Override with a reason.</td></tr>'
   +'<tr><td>Monthly minimum</td><td>'+money(MIN_MONTHLY)+'/mo</td><td>A truck does not roll for less. Override needs a reason (bundled account).</td></tr>'
-  +'<tr><td>Pass-throughs</td><td>At cost</td><td>Dump fees, lift rentals, compressor rentals, irrigation parts: no margin on rentals and parts.</td></tr>'
+  +'<tr><td>Other costs (dump fees, rentals, parts)</td><td>Margin applies</td><td>Dump fees, rentals and parts enter at our cost and price through the same chain as labor.</td></tr>'
   +'<tr><td>Crew-provided materials markup</td><td>'+(VENDOR_MAT_MARKUP*100)+'%</td><td>Their procurement cost when the crew supplies product.</td></tr></table>'
   +'<h2>Where These Numbers Come From</h2>'
   +'<table><tr><th>Source</th><th>What it feeds</th></tr>'
@@ -932,8 +936,8 @@ function printQuote(internal){
       +'<tr><td>Incidentals ('+(INCIDENTALS*100)+'% of labor)</td><td>'+money(r.incCost)+'</td></tr>'
       +r.c.matLines.map(m=>'<tr><td>'+m.label+'</td><td>'+money(m.cost)+'</td></tr>').join('')
       +'<tr><td>Equipment fee ('+r.c.equipHrs.toFixed(1)+' hrs @ $'+r.equipRate+'/hr)</td><td>'+money(r.equipCost)+'</td></tr>'
+      +(r.flatCost?'<tr><td>Other costs (margin applies)</td><td>'+money(r.flatCost)+'</td></tr>':'')
       +'<tr><td><b>'+(r.inhouse?'In-house crew cost':'Crew company total (8% margin basis, Bid Calculator math)')+'</b></td><td><b>'+money(r.totalCost)+'</b></td></tr>'
-      +(r.flatCost?'<tr><td>Pass-through at cost</td><td>'+money(r.flatCost)+'</td></tr>':'')
       +'<tr><td><b>Margin '+r.margin+'% | Regional x'+region.mult.toFixed(2)+' | '+money2(r.perUnit)+' per '+r.c.unitName+' (market '+money2(r.mktLo)+'-'+money2(r.mktHi)+')</b></td><td><b>'+money(r.price)+'</b></td></tr></table>';
     }
     return x+'</div>';
@@ -951,7 +955,7 @@ function printQuote(internal){
   if(enhAnnual)h+='<div class="p-total" style="font-size:13px;border-top:none;margin-top:4px;padding-top:0"><span>Enhancement Program</span><span>'+money(enhAnnual)+'/yr</span></div>';
   if(internal&&$('minOverride').checked)h+='<div class="p-note"><b>Minimum override active.</b> Reason: '+($('minReason').value||'not stated')+'</div>';
   h+='<div class="p-note">'+(internal
-    ?'Internal document. Rate factors match the Bid Calculator: 15% burden, 4% incidentals, 8% crew margin (divide basis). Pass-throughs at cost. Prepared by '+($('prepBy').value||S.user||'')+'.'
+    ?'Internal document. Rate factors match the Bid Calculator: 15% burden, 4% incidentals, 8% crew margin (divide basis), City Wide margin on every cost line. Prepared by '+($('prepBy').value||S.user||'')+'.'
     :'City Wide Facility Solutions manages your complete grounds program with licensed crews, documented irrigation and water-schedule compliance, and photo records on every visit. GoCityWide.com')+'</div>';
   $('printArea').innerHTML=h;
   window.print();
