@@ -171,6 +171,7 @@ body{
     <div class="hdr-actions">
       <button class="hdr-btn" id="userBtn" onclick="changeUser()">Set Your Name</button>
       <button class="hdr-btn" onclick="openSaves()">Saved Work</button>
+      <button class="hdr-btn" onclick="resetAll()">Clear All Fields</button>
     </div>
   </div>
   <div class="tabs">
@@ -283,14 +284,15 @@ function money2(n){return '$'+n.toFixed(2)}
 function num(v,d){const x=parseFloat(v);return isNaN(x)?d:x}
 
 /* ---------- REGIONS (wages: BLS OEWS May 2025 + 2026 job boards; NNV runs $2-3/hr above LV at every tier) ---------- */
+/* July 29, 2026 pay policy update: crew wages raised - crews $25+/hr, technical trades higher, supervisors default $35/hr (editable per service). */
 const REGIONS={
-  lv:   {label:'Las Vegas', mult:1.00, wages:{crew:18.0,irr:22.0,tree:22.0}, visitsDefault:42, trimsDefault:6,
+  lv:   {label:'Las Vegas', mult:1.00, wages:{crew:25.0,irr:28.0,tree:28.0}, visitsDefault:42, trimsDefault:6,
          note:'Competitive baseline. SNWA territory: AB356 removes nonfunctional commercial turf by 12/31/2026. Every account still holding decorative grass is a conversion conversation waiting to happen.'},
-  reno: {label:'Reno / Sparks', mult:1.10, wages:{crew:20.5,irr:25.0,tree:24.0}, visitsDefault:30, trimsDefault:4,
+  reno: {label:'Reno / Sparks', mult:1.10, wages:{crew:27.0,irr:30.0,tree:30.0}, visitsDefault:30, trimsDefault:4,
          note:'Northern Nevada premium: smaller labor pool, Tesla-corridor wage competition, and a real winter. Season runs about April to October. TMWA assigned-day watering, no watering Mondays. Winterization and leaf season are yearly line items here.'},
-  carson:{label:'Carson City', mult:1.10, wages:{crew:20.5,irr:25.0,tree:24.0}, visitsDefault:30, trimsDefault:4,
+  carson:{label:'Carson City', mult:1.10, wages:{crew:27.0,irr:30.0,tree:30.0}, visitsDefault:30, trimsDefault:4,
          note:'Same wage band and season as Reno. Hard freeze comes earlier: blow out irrigation by late October.'},
-  tric: {label:'TRIC / USA Parkway', mult:1.18, wages:{crew:22.0,irr:26.0,tree:25.0}, visitsDefault:26, trimsDefault:4,
+  tric: {label:'TRIC / USA Parkway', mult:1.18, wages:{crew:28.0,irr:31.0,tree:31.0}, visitsDefault:26, trimsDefault:4,
          note:'Industrial campuses, 20+ miles of deadhead, near zero on-corridor vendors. Trip time is real cost here. Mostly rock and native scopes with big frontages.'}
 };
 
@@ -328,6 +330,7 @@ const DEFAULT_RB={
 const EQUIP={mow:16, detail:8, spray:6, irr:6, tree:15, winter:18, haul:10};
 
 /* Rate factors, aligned to Bid Calculator Step 1b */
+const SUP_WAGE=35;      /* working supervisor default $/hr, editable on every service */
 const BURDEN=0.15;        /* payroll burden on wages */
 const INCIDENTALS=0.04;   /* room for what we are not considering: 4% of labor */
 const IC_MARGIN=0.08;     /* crew company margin, divide basis: cost / (1 - 8%), same math as the Bid Calculator */
@@ -585,7 +588,14 @@ function priceService(s){
 
   /* 1. raw labor + payroll burden */
   const wage=num(st.wage,region.wages[s.wageKey]);
-  const laborCost=c.manHrs*wage*(1+BURDEN);
+  const techLabor=c.manHrs*wage*(1+BURDEN);
+  const crewN=Math.max(1,Math.round(num(st.crewN,num(st.crew,3))));
+  const clockHrs=c.manHrs/crewN;
+  const supN=Math.max(0,Math.round(num(st.sup,0)));
+  const supWage=num(st.supWage,SUP_WAGE);
+  const supHrs=supN*clockHrs;
+  const supCost=supHrs*supWage*(1+BURDEN);
+  const laborCost=techLabor+supCost;
 
   /* 2. incidentals: room for what nobody itemized */
   const incCost=laborCost*INCIDENTALS;
@@ -622,7 +632,7 @@ function priceService(s){
   const perUnit=c.unitQty?((price-flatPriced)/(c.unitDiv||1))/c.unitQty:0;
   const mktLo=c.mktLo*region.mult, mktHi=c.mktHi*region.mult;
   const monthly=s.mode==='monthly'?price/12:0;
-  return {s,st,c,wage,laborCost,incCost,matCost,vendorMat,cwMat,equipCost,equipRate,flatCost,flatPriced,vendorBase,vendorCost,inhouse,totalCost,margin,price,monthly,perUnit,mktLo,mktHi,floored};
+  return {s,st,c,wage,laborCost,techLabor,crewN,clockHrs,supN,supWage,supHrs,supCost,incCost,matCost,vendorMat,cwMat,equipCost,equipRate,flatCost,flatPriced,vendorBase,vendorCost,inhouse,totalCost,margin,price,monthly,perUnit,mktLo,mktHi,floored};
 }
 function activeResults(){return SERVICES.filter(s=>S.svcOn[s.id]).map(priceService).filter(Boolean);}
 function applyMinimums(results){
@@ -678,6 +688,9 @@ function renderServices(){
     if(on){
       body='<div class="svc-grid">'
       +s.fields.map(f=>fieldHtml(s,f,st,region)).join('')
+      +(s.fields.some(function(f){return f.k==='crew'})?'':'<div class="field"><label>Crew Members on Site'+srcTag('ask')+'</label><input type="number" min="1" step="1" value="'+(st.crewN||'')+'" placeholder="3" onchange="setSvc(\''+s.id+'\',\'crewN\',this.value)"><small>How many crew members are present for this work. Sets the on-site clock hours shown in the build-up.</small></div>')
+      +'<div class="field"><label>Supervisors on Site'+srcTag('ask')+'</label><input type="number" min="0" step="1" value="'+(st.sup||'')+'" placeholder="0" onchange="setSvc(\''+s.id+'\',\'sup\',this.value)"><small>On-site supervisor billed for the crew clock time. Leave 0 for none.</small></div>'
+      +'<div class="field"><label>Supervisor $/hr'+srcTag('ask')+'</label><input type="number" step="0.5" value="'+(st.supWage||'')+'" placeholder="'+SUP_WAGE.toFixed(2)+'" onchange="setSvc(\''+s.id+'\',\'supWage\',this.value)"></div>'
       +'<div class="field"><label>Crew Wage $/hr'+srcTag('ask')+'</label><input type="number" step="0.5" value="'+(st.wage||'')+'" placeholder="'+region.wages[s.wageKey].toFixed(2)+'" onchange="setSvc(\''+s.id+'\',\'wage\',this.value)"><small>'+(s.wageKey==='irr'?'Irrigation tech rate.':s.wageKey==='tree'?'Tree crew rate.':'Blended crew rate (laborers + lead).')+' Prepopulated for '+region.label+'.</small></div>'
       +'<div class="field"><label>Equipment $/hr</label><input type="number" step="1" value="'+(st.equip||'')+'" placeholder="'+s.equip+'" onchange="setSvc(\''+s.id+'\',\'equip\',this.value)"><small>Truck, trailer, mowers, handhelds, fuel.</small></div>'
       +'<div class="field"><label>'+s.flatLabel+'</label><input type="number" step="10" value="'+(('flat' in st)?st.flat:'')+'" placeholder="0" onchange="setSvc(\''+s.id+'\',\'flat\',this.value)"><small>Enter what it costs us. The tool prices margin on this line like everything else.</small></div>'
@@ -688,7 +701,9 @@ function renderServices(){
         const flag=r.perUnit>=r.mktLo&&r.perUnit<=r.mktHi?'<span class="mktflag ok">inside market range</span>':(r.perUnit<r.mktLo?'<span class="mktflag warn">below market, room to hold price</span>':'<span class="mktflag warn">above market, check inputs or expect pushback</span>');
         body+='<div class="buildup">'
         +(r.c.detail?'<div class="bl mkt"><span>'+r.c.detail+'</span></div>':'')
-        +'<div class="bl"><span>Crew labor: '+r.c.manHrs.toFixed(1)+' man-hrs/yr @ $'+r.wage.toFixed(2)+' + '+(BURDEN*100)+'% payroll burden</span><b>'+money(r.laborCost)+'</b></div>'
+        +'<div class="bl"><span>Crew labor: '+r.c.manHrs.toFixed(1)+' man-hrs/yr @ $'+r.wage.toFixed(2)+' + '+(BURDEN*100)+'% payroll burden</span><b>'+money(r.techLabor)+'</b></div>'
+        +'<div class="bl"><span>Crew on site: '+r.crewN+' crew'+(r.supN?' + '+r.supN+' supervisor':'')+', about '+r.clockHrs.toFixed(1)+' clock hrs/yr</span><b></b></div>'
+        +(r.supN?'<div class="bl"><span>Supervisor: '+r.supHrs.toFixed(1)+' hrs @ $'+r.supWage.toFixed(2)+' + '+(BURDEN*100)+'% burden</span><b>'+money(r.supCost)+'</b></div>':'')
         +'<div class="bl"><span>Incidentals &amp; unlisted supplies ('+(INCIDENTALS*100)+'% of labor)</span><b>'+money(r.incCost)+'</b></div>'
         +r.c.matLines.map(m=>'<div class="bl"><span>'+m.label+'</span><b>'+money(m.cost)+'</b></div>').join('')
         +(r.vendorMat&&r.matCost?'<div class="bl"><span>Crew procurement markup on materials ('+(VENDOR_MAT_MARKUP*100)+'%)</span><b>'+money(r.vendorMat-r.matCost)+'</b></div>':'')
@@ -784,7 +799,7 @@ function recalc(){
   const groundsR=results.find(r=>r.s.id==='grounds');
   const acres=groundsR?groundsR.c.unitQty:0;
   $('mPerAcre').textContent=acres>0?money(adjMonthly/acres):'$0';
-  const totHrs=results.reduce((a,r)=>a+r.c.manHrs,0);
+  const totHrs=results.reduce((a,r)=>a+r.c.manHrs+(r.supHrs||0),0);
   $('mHours').textContent=Math.round(totHrs).toLocaleString();
   $('mSvcs').textContent=results.length;
   $('minRow').style.display=minMsg?'':'none';
@@ -932,7 +947,8 @@ function printQuote(internal){
     if(r.c.detail)x+='<p style="color:var(--cw-grey)">'+r.c.detail+'</p>';
     if(internal){
       x+='<table class="p-table"><tr><th>Cost Line</th><th>Amount</th></tr>'
-      +'<tr><td>Crew labor '+r.c.manHrs.toFixed(1)+' man-hrs @ $'+r.wage.toFixed(2)+' +'+(BURDEN*100)+'% burden</td><td>'+money(r.laborCost)+'</td></tr>'
+      +'<tr><td>Crew labor '+r.c.manHrs.toFixed(1)+' man-hrs @ $'+r.wage.toFixed(2)+' +'+(BURDEN*100)+'% burden</td><td>'+money(r.techLabor)+'</td></tr>'
+      +(r.supN?'<tr><td>Supervisor '+r.supHrs.toFixed(1)+' hrs @ $'+r.supWage.toFixed(2)+' +'+(BURDEN*100)+'% burden</td><td>'+money(r.supCost)+'</td></tr>':'')
       +'<tr><td>Incidentals ('+(INCIDENTALS*100)+'% of labor)</td><td>'+money(r.incCost)+'</td></tr>'
       +r.c.matLines.map(m=>'<tr><td>'+m.label+'</td><td>'+money(m.cost)+'</td></tr>').join('')
       +'<tr><td>Equipment fee ('+r.c.equipHrs.toFixed(1)+' hrs @ $'+r.equipRate+'/hr)</td><td>'+money(r.equipCost)+'</td></tr>'
@@ -984,6 +1000,7 @@ function applySnapshot(p){
 }
 let saveTimer=null;
 function autosaveSoon(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>localSave(false),1200);}
+function resetAll(){clearTimeout(saveTimer);localStorage.removeItem('cwls_current');location.reload();}
 function localSave(announce){
   localStorage.setItem('cwls_current',JSON.stringify({ts:Date.now(),payload:snapshot()}));
   if(announce)alert('Saved locally.');
